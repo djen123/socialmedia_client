@@ -2,85 +2,137 @@ import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import Button from 'react-bootstrap/Button';
-import { NavLink, useNavigate } from 'react-router-dom';
-import logo from '../assets/logo.png';
-import axios from '../api/axios.js';
+import Form from 'react-bootstrap/Form';
+import { NavLink } from 'react-router';
+import logo from '../assets/logo/LI-Logo.png';
+import { useNavigate } from "react-router";
+import { AiFillHome } from "react-icons/ai";
+import { FaUserFriends } from "react-icons/fa";
+import { TbBriefcase2Filled } from "react-icons/tb";
+import { IoIosLogOut } from "react-icons/io";
+import { useDispatch, useSelector } from 'react-redux'
+import { logoutUser } from '../store/actions/auth.js'
 
-function AppNavBar({ currentUser,logoutFrontEnd }) {
-  const navigate = useNavigate();
+const navLinkWrapperStyle = {
+  position: 'sticky',
+  top: 0,
+  zIndex: 1000,
+  padding: 0
+}
+
+function AppNavbar() {
+  let navigate = useNavigate()
+  const dispatch = useDispatch()
+  const currentUser = useSelector((store) => store.auth.currentUser)
 
   async function handleLogout() {
-    try {
-      const res = await axios.post("/users/logout");
-      alert(res.data.message);
-      logoutFrontEnd() // clears react state
-      navigate("/login");
-    } catch (error) {
-      console.log(error);
-    }
+    await dispatch(logoutUser())
+    navigate('/')
   }
 
   return (
-    <Navbar expand="lg" bg="dark" variant="dark" className="shadow-sm py-2">
+    <Navbar collapseOnSelect expand="lg" 
+      className="bg-white" 
+      style={navLinkWrapperStyle}>
       <Container>
-
-        {/* Brand */}
-        <Navbar.Brand as={NavLink} to="/" className="fw-bold d-flex align-items-center gap-2">
+        <Navbar.Brand
+          as={NavLink}
+          to="/"
+        >
           <img
+            alt=""
             src={logo}
-            width="35"
-            height="35"
-            alt="logo"
-            style={{ borderRadius: "5px" }}
+            height="30"
+            className="d-inline-block align-top"
           />
-          Connect
         </Navbar.Brand>
-
-        <Navbar.Toggle aria-controls="main-navbar" />
-        <Navbar.Collapse id="main-navbar">
-
-          {/* Left Links */}
+        <Navbar.Toggle aria-controls="responsive-navbar-nav" />
+        <Navbar.Collapse id="responsive-navbar-nav">
+          <Form.Control
+            type="search"
+            placeholder="I'm looking for ..."
+            className="me-2"
+            aria-label="Search"
+            style={{ maxWidth: '300px' }}
+          />
           <Nav className="me-auto">
-             <Nav.Link as={NavLink} to="/posts">Posts</Nav.Link>
-            <Nav.Link as={NavLink} to="/followers">Followers</Nav.Link>
-            <Nav.Link as={NavLink} to="/following">Following</Nav.Link>
+            <Nav.Link
+              as={NavLink}
+              to="/feed"
+            >
+              <span className="d-flex flex-column align-items-center">
+                <AiFillHome className='fs-4' />
+                <span style={{ fontSize: '10px' }}>Home</span>
+              </span>
+            </Nav.Link>
+            <Nav.Link
+              as={NavLink}
+              to="/network"
+            >
+              <span className="d-flex flex-column align-items-center">
+                <FaUserFriends className='fs-4' />
+                <span style={{ fontSize: '10px' }}>My Network</span>
+              </span>
+            </Nav.Link>
+            <Nav.Link
+              as={NavLink}
+              to="/jobs"
+            >
+              <span className="d-flex flex-column align-items-center">
+                <TbBriefcase2Filled className='fs-4' />
+                <span style={{ fontSize: '10px' }}>Jobs</span>
+              </span>
+            </Nav.Link>
           </Nav>
-
-          {/* Right Section */}
-          <Nav className="align-items-center gap-3">
-
+          <Nav>
             {currentUser ? (
               <>
-                {/* User avatar + name */}
-                <div className="d-flex align-items-center gap-2 text-light">
-                  <img
-                    src={currentUser.avatar}
-                    width="35"
-                    height="35"
-                    alt="avatar"
-                    style={{ borderRadius: "50%" }}
-                  />
-                  Hi, @{currentUser.name}
-                </div>
-
-                {/* Logout */}
-                <Button variant="outline-light" size="sm" onClick={handleLogout}>
-                  Logout
-                </Button>
+                <Nav.Link
+                  as={NavLink}
+                  to={`/in/${currentUser.username}`}
+                >
+                  <span className="d-flex flex-column align-items-center">
+                    <img
+                      alt=""
+                      src={currentUser.avatar}
+                      width="24"
+                      height="24"
+                      className="d-inline-block align-top rounded-circle"
+                    />
+                    <span style={{ fontSize: '10px' }}>Me</span>
+                  </span>
+                </Nav.Link>
+                <Nav.Link
+                  onClick={handleLogout}
+                  variant="outline-dark"
+                >
+                  <span className="d-flex flex-column align-items-center">
+                    <IoIosLogOut className='fs-4' />
+                    <span style={{ fontSize: '10px' }}>Logout</span>
+                  </span>
+                </Nav.Link>
               </>
             ) : (
               <>
-                <Nav.Link as={NavLink} to="/signup">Signup</Nav.Link>
-                <Nav.Link as={NavLink} to="/login">Login</Nav.Link>
+                <Nav.Link
+                  as={NavLink}
+                  to="/login"
+                >
+                  Sign in
+                </Nav.Link>
+                <Button
+                  variant="primary"
+                  onClick={() => navigate('/signup')}
+                >
+                  Join now
+                </Button>
               </>
             )}
-
           </Nav>
-
         </Navbar.Collapse>
       </Container>
     </Navbar>
   );
 }
 
-export default AppNavBar;
+export default AppNavbar;

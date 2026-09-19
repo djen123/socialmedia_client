@@ -1,69 +1,74 @@
-import { useState } from "react";
-import { Form, Button } from "react-bootstrap";
-import axios from "../api/axios.js";
-import { useNavigate } from "react-router-dom";
+import { useState } from 'react'
+import { Form, Button } from 'react-bootstrap'
+import { Link, useNavigate } from 'react-router';
+import { loginUser } from '../store/actions/auth.js'
+import { useDispatch } from 'react-redux'
 
-const Login = ({fetchCurrentUser}) => {
+const wrapperStyle = {
+  maxWidth: '400px',
+  margin: '0 auto',
+  padding: '20px',
+  boxShadow: 'rgba(0, 0, 0, 0.16) 0px 1px 4px',
+  backgroundColor: 'white',
+  borderRadius: '6px'
+}
+
+function Login() {
   const [user, setUser] = useState({
-    email: "",
-    password: ""
-  });
+    email: '',
+    password: ''
+  })
+  let navigate = useNavigate();
+  const dispatch = useDispatch()
 
-  const navigate = useNavigate();
-
-  const handleLogin = async () => {
-    try {
-      const res = await axios.post("/users/login", user);
-
-      alert(res.data.message);
-      fetchCurrentUser()
-      navigate("/");
-
-    } catch (error) {
-      if (error.response) {
-        alert(error.response.data.message);
-      }
-      console.error("Login error:", error);
-    }
-  };
+  async function handleLogin() {
+    const result = await dispatch(loginUser(user))
+    if(result.ok) navigate('/feed')
+  }
 
   return (
-    <div style={{maxWidth:"400px",margin:"0 auto",padding:"20px",boxShadow:"rgba(0,0,0,0.16)0px 1px 4px"}}>
-      <h1 className="display-5 mb-4">Login</h1>
-
+    <div style={wrapperStyle}>
+      <h1 className='display-6 mb-2'>Sign in</h1>
+      <p>
+        New to LinkedIn?{' '}
+        <Link to='/signup' className='app-link'>Join now</Link>
+      </p>
       <Form>
         <Form.Group className="mb-3">
-          <Form.Label>Email</Form.Label>
-          <Form.Control
-            type="email"
-            placeholder="Enter email"
+          <Form.Label>Email address</Form.Label>
+          <Form.Control 
+            type="email" 
+            placeholder="Enter email" 
             value={user.email}
-            onChange={(e) =>
-              setUser({ ...user, email: e.target.value })
-            }
+            onInput={(e) => setUser({ ...user, email: e.target.value })}
           />
         </Form.Group>
 
         <Form.Group className="mb-3">
           <Form.Label>Password</Form.Label>
-          <Form.Control
-            type="password"
-            placeholder="Enter password"
+          <Form.Control 
+            type="email" 
+            placeholder="Enter password" 
             value={user.password}
-            onChange={(e) =>
-              setUser({ ...user, password: e.target.value })
-            }
+            onInput={(e) => setUser({ ...user, password: e.target.value })}
           />
         </Form.Group>
 
-        <div className="d-flex justify-content-end">
-          <Button variant="primary" type="button" onClick={handleLogin}>
-            Login
-          </Button>
-        </div>
+        <p className='small mb-4'>
+          By clicking Continue to join or sign in, you agree to LinkedIn’s <a className='app-link' href='#'>User Agreement</a>, <a className='app-link' href='#'>Privacy Policy</a>, and <a className='app-link' href='#'>Cookie Policy</a>.
+        </p>
+
+        <Button 
+          variant="primary" 
+          type="button"
+          className='w-100 mb-2'
+          onClick={handleLogin}
+        >
+          Sign in
+        </Button>
       </Form>
     </div>
   );
-};
+}
 
 export default Login;

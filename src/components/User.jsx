@@ -1,85 +1,101 @@
-import { useState } from "react";
-import Button from "react-bootstrap/Button";
-import Card from "react-bootstrap/Card";
-import { FaUserEdit } from "react-icons/fa";
-import { MdDeleteForever } from "react-icons/md";
-import axios from "../api/axios";
-import EditUser from "./EditUser";
+import Button from 'react-bootstrap/Button';
+import Card from 'react-bootstrap/Card';
+import { CiEdit } from "react-icons/ci";
+import { MdDelete } from "react-icons/md";
+import axios from '../api/axios.js';
+import { useState } from 'react';
+import { HiUserAdd } from "react-icons/hi";
+import { FaCheck } from "react-icons/fa6";
+import { fetchConnections } from '../store/actions/network.js'
+import { useDispatch, useSelector } from 'react-redux'
 
-function User({ user, fetchUsers,currentUser}) {
-  const [editUserId, setEditUserId] = useState(null);
+function User({ user, isProfilePage = false }) {
+  const dispatch = useDispatch()
+  const connections = useSelector((state) => state.network.connections)
+  const receivedRequests = useSelector((state) => state.network.receivedRequests)
+  const sentRequests = useSelector((state) => state.network.sentRequests)
 
-  const deleteUser = async () => {
+  const handleConnect = async () => {
     try {
-      const response = await axios.delete(`/users/${user._id}`);
-      alert(response.data.message);
-      fetchUsers();
+      const res = await axios.post('/network/connections', { recipient: user._id })
+      alert(res.data.message)
+      dispatch(fetchConnections())
     } catch (error) {
-      console.error("Error deleting user:", error);
+      console.error('Error while connecting to user:', error)
     }
-  };
+  }
 
+  const handleAcceptConnection = async () => {
+    try {
+      const res = await axios.post('/network/connections/accept', { requester: user._id })
+      alert(res.data.message)
+      dispatch(fetchConnections())
+    } catch (error) {
+      console.error('Error while accepting connection:', error)
+    }
+  }
+
+  const isAlreadyConnected = connections.some(connection => connection._id === user._id)
+  const isAlreadySentRequest = sentRequests.some(request => request._id === user._id)
+  const isAlreadyReceivedRequest = receivedRequests.some(request => request._id === user._id)
+
+  let buttonJsx = (
+      <Button 
+        variant="outline-primary"
+        onClick={handleConnect}
+      >
+        <HiUserAdd />{' '}
+        Connect
+      </Button>
+  )
+
+  if (isAlreadySentRequest) {
+    buttonJsx = (
+      <Button 
+        variant="outline-primary"
+        onClick={handleConnect}
+      >
+        <FaCheck />{' '}
+        Requested
+      </Button>
+    )
+  }
+
+  if (isAlreadyReceivedRequest) {
+    buttonJsx = (
+      <Button 
+        variant="primary"
+        onClick={handleAcceptConnection}
+      >
+        <FaCheck />{' '}
+        Accept
+      </Button>
+    )
+  }
+  
   return (
     <>
-      <EditUser
-        user={user}
-        fetchUsers={fetchUsers}
-        editUserId={editUserId}
-        setEditUserId={setEditUserId}
-      />
-
-      <Card className = "m-auto" style={{ width: "18rem"}}>
-        <Card.Img
-          variant="top"
-          src={user.avatar}
-          style={{
-            width: "100%",
-            height: "200px",
-            objectFit: "cover"
-          }}
-        />
-        {/* only show edit and delete button if currentuser === user */}
-      {currentUser && currentUser._id === user._id && (
-  <>
-    <FaUserEdit
-      style={{
-        cursor: "pointer",
-        position: "absolute",
-        right: "40px",
-        top: "10px",
-        padding: "5px",
-        fontSize: "2rem"
-      }}
-      onClick={() => setEditUserId(user._id)}
-    />
-
-    <MdDeleteForever
-      style={{
-        cursor: "pointer",
-        position: "absolute",
-        right: "10px",
-        top: "10px",
-        padding: "5px",
-        fontSize: "2rem",
-        backgroundColor: "purple",
-        color: "white",
-        borderRadius: "5px"
-      }}
-      onClick={deleteUser}
-    />
-  </>
-)}
-
-
-
+      <Card className='d-flex justify-content-around' style={{ width: '18rem' ,height:"18rem"} }>
+        <Card.Img variant="top" src={user.coverImage} />
+        <div className='text-center' style={{ marginTop: '-50px' }}>
+          <img 
+          // user is all user not just current user
+            src={user.avatar} 
+            alt="profile-picture" 
+            className='rounded-circle' 
+            width="120"
+            height="120"
+          />
+        </div>
         <Card.Body>
-          <Card.Title>@{user.username}</Card.Title>
-
-          <Card.Text className="lead">{user.name}</Card.Text>
-
-          <Card.Text className="text-muted">{user.email}</Card.Text>
-
-          <Button variant="primary">Follow</Button>
+          <Card.Title>{user.name}</Card.Title>
+          <Card.Text className='text-muted'>
+            {user.bio?.length > 90 ?
+              `${user.bio.substring(0, 90)}...` :
+              user.bio
+            }
+          </Card.Text>
+          {!isProfilePage && !isAlreadyConnected && buttonJsx}
         </Card.Body>
       </Card>
     </>
