@@ -58,9 +58,7 @@ export const loginUser = (user) => async (dispatch) => {
 
 export const logoutUser = (user) => async (dispatch) => {
   try {
-    const res = await axios.post('/users/logout',{}, {
-  withCredentials: true
-})
+    const res = await axios.post('/users/logout')
     alert(res.data.message)
     await dispatch(checkAuth())
   } catch (error) {
